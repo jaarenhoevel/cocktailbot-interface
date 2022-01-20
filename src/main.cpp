@@ -34,7 +34,7 @@ CRGB leds[LED_COUNT];
 PixelAnimation *pixel;
 
 char serialCommandBuffer[1024];
-SerialCommands serialCommands_(&Serial, serialCommandBuffer, sizeof(serialCommandBuffer), SERIAL_CLI_LINE_BREAK, SERIAL_CLI_SEPARATOR);
+SerialCommands serialCommands(&Serial, serialCommandBuffer, sizeof(serialCommandBuffer), SERIAL_CLI_LINE_BREAK, SERIAL_CLI_SEPARATOR);
 
 void setup() {
   FastLED.addLeds<LED_TYPE, LED_DATA_PIN, LED_COLOR_ORDER>(leds, LED_COUNT);
@@ -46,5 +46,6 @@ void setup() {
 }
 
 void loop() {
+  serialCommands.ReadSerial();
   pixel->process();
 }
