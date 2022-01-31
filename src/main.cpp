@@ -7,7 +7,7 @@
 #include <SerialCommands.h>
 
 // SHIFT REGISTER //
-#define SHIFT_REGISTER_COUNT        4
+#define SHIFT_REGISTER_COUNT        8
 
 #define SHIFT_REGISTER_DATA_PIN     6
 #define SHIFT_REGISTER_CLOCK_PIN    7
