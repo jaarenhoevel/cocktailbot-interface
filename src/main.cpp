@@ -28,7 +28,7 @@
 #define LED_ANIMATION_FPS           50
 
 // SERIAL CLI //
-#define SERIAL_CLI_BAUDRATE         115200
+#define SERIAL_CLI_BAUDRATE         9600
 #define SERIAL_CLI_LINE_BREAK       "\n"
 #define SERIAL_CLI_SEPARATOR        " "
 
