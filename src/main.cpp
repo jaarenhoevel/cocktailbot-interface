@@ -158,7 +158,7 @@ void cmdGetSensor(SerialCommands* sender) {
   if (strcmp(parameterString, "scale") == 0) {
     if (loadcell.wait_ready_timeout(500)) {
       sender->GetSerial()->print("OK ");
-      sender->GetSerial()->println(round(loadcell.get_units(10)));
+      sender->GetSerial()->println(round(loadcell.get_units(2)));
       return;
     } else {
       sender->GetSerial()->println("ERROR Scale not ready!");
