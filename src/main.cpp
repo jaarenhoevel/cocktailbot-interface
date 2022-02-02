@@ -41,15 +41,17 @@ float loadcellScale = 1000;
 
 char cliLineBreak[] = SERIAL_CLI_LINE_BREAK;
 char cliSeperator[] = SERIAL_CLI_SEPARATOR;
-char serialCommandBuffer[512];
+char serialCommandBuffer[1024];
 SerialCommands serialCommands(&Serial, serialCommandBuffer, sizeof(serialCommandBuffer), cliLineBreak, cliSeperator);
 
 void cmdUnrecognized(SerialCommands* sender, const char* cmd);
+void cmdHandshake(SerialCommands* sender);
 void cmdSetRelay(SerialCommands* sender);
 void cmdGetSensor(SerialCommands* sender);
 void cmdCalibrateSensor(SerialCommands* sender);
 void cmdSetLight(SerialCommands* sender);
 
+SerialCommand cmdHandshake_("handshake", cmdHandshake);
 SerialCommand cmdSetRelay_("set_relay", cmdSetRelay);
 SerialCommand cmdGetSensor_("get_sensor", cmdGetSensor);
 SerialCommand cmdCalibrateSensor_("calibrate_sensor", cmdCalibrateSensor);
@@ -69,6 +71,7 @@ void setup() {
   Serial.begin(SERIAL_CLI_BAUDRATE);
 
   serialCommands.SetDefaultHandler(cmdUnrecognized);
+  serialCommands.AddCommand(&cmdHandshake_);
   serialCommands.AddCommand(&cmdSetRelay_);
   serialCommands.AddCommand(&cmdGetSensor_);
   serialCommands.AddCommand(&cmdCalibrateSensor_);
@@ -91,6 +94,13 @@ void cmdUnrecognized(SerialCommands* sender, const char* cmd) {
   sender->GetSerial()->print("ERROR Unrecognized command [");
 	sender->GetSerial()->print(cmd);
 	sender->GetSerial()->println("]!");
+}
+
+void cmdHandshake(SerialCommands* sender) {
+	sender->GetSerial()->print(sender->Next());
+  sender->GetSerial()->print(" ");
+  
+  sender->GetSerial()->println("OK :)");
 }
 
 void cmdSetRelay(SerialCommands* sender) {
