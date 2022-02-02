@@ -41,7 +41,7 @@ float loadcellScale = 1000;
 
 char cliLineBreak[] = SERIAL_CLI_LINE_BREAK;
 char cliSeperator[] = SERIAL_CLI_SEPARATOR;
-char serialCommandBuffer[1024];
+char serialCommandBuffer[256];
 SerialCommands serialCommands(&Serial, serialCommandBuffer, sizeof(serialCommandBuffer), cliLineBreak, cliSeperator);
 
 void cmdUnrecognized(SerialCommands* sender, const char* cmd);
@@ -156,9 +156,9 @@ void cmdGetSensor(SerialCommands* sender) {
   }
 
   if (strcmp(parameterString, "scale") == 0) {
-    if (loadcell.wait_ready_timeout(500)) {
+    if (loadcell.wait_ready_timeout(250)) {
       sender->GetSerial()->print("OK ");
-      sender->GetSerial()->println(round(loadcell.get_units(2)));
+      sender->GetSerial()->println(round(loadcell.get_units(1)));
       return;
     } else {
       sender->GetSerial()->println("ERROR Scale not ready!");
