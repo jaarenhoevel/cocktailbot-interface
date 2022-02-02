@@ -35,7 +35,9 @@
 CRGB leds[LED_COUNT];
 PixelAnimation *pixel;
 RelayController<SHIFT_REGISTER_COUNT> *relayController;
-HX711 scale;
+HX711 loadcell;
+
+float loadcellScale = 1000;
 
 char cliLineBreak[] = SERIAL_CLI_LINE_BREAK;
 char cliSeperator[] = SERIAL_CLI_SEPARATOR;
@@ -60,7 +62,9 @@ void setup() {
 
   relayController = new RelayController<SHIFT_REGISTER_COUNT>(SHIFT_REGISTER_DATA_PIN, SHIFT_REGISTER_CLOCK_PIN, SHIFT_REGISTER_LATCH_PIN, RELAY_PIN_INVERTED);
 
-  scale.begin(SCALE_DATA_PIN, SCALE_CLOCK_PIN);
+  loadcell.begin(SCALE_DATA_PIN, SCALE_CLOCK_PIN);
+  loadcell.set_scale(loadcellScale);
+  loadcell.tare(10);
 
   Serial.begin(SERIAL_CLI_BAUDRATE);
 
@@ -142,9 +146,9 @@ void cmdGetSensor(SerialCommands* sender) {
   }
 
   if (strcmp(parameterString, "scale") == 0) {
-    if (scale.wait_ready_timeout(500)) {
+    if (loadcell.wait_ready_timeout(500)) {
       sender->GetSerial()->print("OK ");
-      sender->GetSerial()->println(scale.read());
+      sender->GetSerial()->println(round(loadcell.get_units(10)));
       return;
     } else {
       sender->GetSerial()->println("ERROR Scale not ready!");
@@ -176,7 +180,8 @@ void cmdCalibrateSensor(SerialCommands* sender) {
     parameterString = sender->Next();
 
     if (strcmp(parameterString, "tare") == 0) {
-      // Tare loadcell pls
+      loadcell.tare(10);
+      
       sender->GetSerial()->println("OK");
       return;
     }
@@ -189,9 +194,12 @@ void cmdCalibrateSensor(SerialCommands* sender) {
         return;
       }
 
-      //uint32_t newWeight = atoi(parameterString);
+      uint32_t newWeight = atoi(parameterString);
 
-      // Calibrate loadcell pls
+      double currentWeight = loadcell.get_value(10);
+      loadcellScale = currentWeight / (newWeight * 1.f);
+      loadcell.set_scale(loadcellScale); // We need to store this value...
+
       sender->GetSerial()->println("OK");
       return;  
     }
