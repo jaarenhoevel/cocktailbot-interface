@@ -35,6 +35,7 @@
 CRGB leds[LED_COUNT];
 PixelAnimation *pixel;
 RelayController<SHIFT_REGISTER_COUNT> *relayController;
+HX711 scale;
 
 char cliLineBreak[] = SERIAL_CLI_LINE_BREAK;
 char cliSeperator[] = SERIAL_CLI_SEPARATOR;
@@ -55,9 +56,11 @@ SerialCommand cmdSetLight_("set_light", cmdSetLight);
 void setup() {
   FastLED.addLeds<LED_TYPE, LED_DATA_PIN, LED_COLOR_ORDER>(leds, LED_COUNT);
   pixel = new PixelAnimation(leds, LED_ANIMATION_FPS);
+  pixel->setBaseColor(CRGB::Red);
+
   relayController = new RelayController<SHIFT_REGISTER_COUNT>(SHIFT_REGISTER_DATA_PIN, SHIFT_REGISTER_CLOCK_PIN, SHIFT_REGISTER_LATCH_PIN, RELAY_PIN_INVERTED);
 
-  pixel->setBaseColor(CRGB::Red);
+  scale.begin(SCALE_DATA_PIN, SCALE_CLOCK_PIN);
 
   Serial.begin(SERIAL_CLI_BAUDRATE);
 
@@ -139,9 +142,14 @@ void cmdGetSensor(SerialCommands* sender) {
   }
 
   if (strcmp(parameterString, "scale") == 0) {
-    sender->GetSerial()->print("OK ");
-    sender->GetSerial()->println("50");
-    return;
+    if (scale.wait_ready_timeout(500)) {
+      sender->GetSerial()->print("OK ");
+      sender->GetSerial()->println(scale.read());
+      return;
+    } else {
+      sender->GetSerial()->println("ERROR Scale not ready!");
+      return;
+    }
   }
 
   if (strcmp(parameterString, "temperature") == 0) {
