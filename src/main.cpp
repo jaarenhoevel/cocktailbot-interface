@@ -5,6 +5,7 @@
 #include <PixelAnimation.h>
 #include <RelayController.cpp>
 #include <SerialCommands.h>
+#include <EEPROM.h>
 
 // SHIFT REGISTER //
 #define SHIFT_REGISTER_COUNT        8
@@ -32,12 +33,15 @@
 #define SERIAL_CLI_LINE_BREAK       "\n"
 #define SERIAL_CLI_SEPARATOR        " "
 
+// CALIBRATION STORAGE //
+#define LOADCELL_SCALE_ADDRESS      0 // Uses 4 Bytes of EEPROM
+
 CRGB leds[LED_COUNT];
 PixelAnimation *pixel;
 RelayController<SHIFT_REGISTER_COUNT> *relayController;
 HX711 loadcell;
 
-float loadcellScale = 1000;
+float loadcellScale;
 
 char cliLineBreak[] = SERIAL_CLI_LINE_BREAK;
 char cliSeperator[] = SERIAL_CLI_SEPARATOR;
@@ -57,17 +61,27 @@ SerialCommand cmdGetSensor_("get_sensor", cmdGetSensor);
 SerialCommand cmdCalibrateSensor_("calibrate_sensor", cmdCalibrateSensor);
 SerialCommand cmdSetLight_("set_light", cmdSetLight);
 
+float readFloat(unsigned int addr);
+void writeFloat(unsigned int addr, float x);
+
 void setup() {
+  // Initiate components
   FastLED.addLeds<LED_TYPE, LED_DATA_PIN, LED_COLOR_ORDER>(leds, LED_COUNT);
   pixel = new PixelAnimation(leds, LED_ANIMATION_FPS);
   pixel->setBaseColor(CRGB::Red);
 
   relayController = new RelayController<SHIFT_REGISTER_COUNT>(SHIFT_REGISTER_DATA_PIN, SHIFT_REGISTER_CLOCK_PIN, SHIFT_REGISTER_LATCH_PIN, RELAY_PIN_INVERTED);
 
+  // Get scale from EEPROM
+  loadcellScale = readFloat(LOADCELL_SCALE_ADDRESS);
+  if (isnan(loadcellScale)) loadcellScale = 1000.f;
+
+  // Setup loadcell
   loadcell.begin(SCALE_DATA_PIN, SCALE_CLOCK_PIN);
   loadcell.set_scale(loadcellScale);
   loadcell.tare(10);
 
+  // Setup CLI
   Serial.begin(SERIAL_CLI_BAUDRATE);
 
   serialCommands.SetDefaultHandler(cmdUnrecognized);
@@ -77,7 +91,7 @@ void setup() {
   serialCommands.AddCommand(&cmdCalibrateSensor_);
   serialCommands.AddCommand(&cmdSetLight_);
 
-  while(!Serial.available());
+  while(!Serial);
 }
 
 void loop() {
@@ -208,7 +222,9 @@ void cmdCalibrateSensor(SerialCommands* sender) {
 
       double currentWeight = loadcell.get_value(10);
       loadcellScale = currentWeight / (newWeight * 1.f);
-      loadcell.set_scale(loadcellScale); // We need to store this value...
+      loadcell.set_scale(loadcellScale);
+
+      writeFloat(LOADCELL_SCALE_ADDRESS, loadcellScale);
 
       sender->GetSerial()->println("OK");
       return;  
@@ -268,4 +284,26 @@ void cmdSetLight(SerialCommands* sender) {
   }
 
   sender->GetSerial()->println("ERROR No valid action specified!");
+}
+
+float readFloat(unsigned int addr) {
+  union {
+    byte b[4];
+    float f;
+  } data;
+  for (int i = 0; i < 4; i++) {
+    data.b[i] = EEPROM.read(addr + i);
+  }
+  return data.f;
+}
+
+void writeFloat(unsigned int addr, float x) {
+  union {
+    byte b[4];
+    float f;
+  } data;
+  data.f = x;
+  for (int i = 0; i < 4; i++) {
+    EEPROM.write(addr + i, data.b[i]);
+  }
 }
