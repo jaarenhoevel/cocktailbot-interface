@@ -30,3 +30,8 @@ jobs:
       run: pio lib install
     - name: Run PlatformIO
       run: platformio run
+    - name: Archive build result
+      uses: actions/upload-artifact@v2
+      with:
+        name: firmware
+        path: .pio/build/nanoatmega328/firmware.hex
