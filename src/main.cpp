@@ -15,7 +15,7 @@
 #define SHIFT_REGISTER_LATCH_PIN    8
 
 // RELAYS //
-#define RELAY_PIN_INVERTED          false
+#define RELAY_PIN_INVERTED          true // Relays use low level trigger
 
 // HX711 SCALE //
 #define SCALE_DATA_PIN              2
