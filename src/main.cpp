@@ -66,11 +66,11 @@ void writeFloat(unsigned int addr, float x);
 
 void setup() {
   // Initiate components
+  relayController = new RelayController<SHIFT_REGISTER_COUNT>(SHIFT_REGISTER_DATA_PIN, SHIFT_REGISTER_CLOCK_PIN, SHIFT_REGISTER_LATCH_PIN, RELAY_PIN_INVERTED);
+
   FastLED.addLeds<LED_TYPE, LED_DATA_PIN, LED_COLOR_ORDER>(leds, LED_COUNT);
   pixel = new PixelAnimation(leds, LED_ANIMATION_FPS);
   pixel->setBaseColor(CRGB::Red);
-
-  relayController = new RelayController<SHIFT_REGISTER_COUNT>(SHIFT_REGISTER_DATA_PIN, SHIFT_REGISTER_CLOCK_PIN, SHIFT_REGISTER_LATCH_PIN, RELAY_PIN_INVERTED);
 
   // Get scale from EEPROM
   loadcellScale = readFloat(LOADCELL_SCALE_ADDRESS);
